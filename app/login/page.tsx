@@ -9,13 +9,6 @@ import Link from 'next/link'
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (data: { email: string; password: string }) => {
-    setIsLoading(true)
-    console.log('Login data:', data)
-    // Simulate API call
-    setTimeout(() => setIsLoading(false), 2000)
-  }
-
   const icon = (
     <svg
       className='w-10 h-10 text-white'
@@ -45,10 +38,7 @@ export default function LoginPage() {
       gradientColors='from-purple-600 to-pink-600'
       icon={icon}
     >
-      <LoginForm
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-      />
+      <LoginForm isLoading={isLoading} />
       {/* <SocialLogin /> */}
       <p className='mt-8 text-center text-sm text-gray-600'>
         Don't have an account?{' '}
