@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
-import { AuthApi } from '@/lib/api/client'
 
 interface LoginFormProps {
   onSubmit?: (data: { email: string; password: string }) => void
@@ -16,36 +14,22 @@ export default function LoginForm({
 }: LoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
     setIsSubmitting(true)
 
     try {
       if (onSubmit) {
         onSubmit({ email, password })
       } else {
-        // Use the new API client
-        const response = await AuthApi.login({ email, password })
-
-        if (response.success) {
-          // Redirect based on user role
-          const userRole = response.data?.user?.role
-          if (userRole === 'admin') {
-            router.push('/admin/dashboard')
-          } else {
-            router.push('/user/products')
-          }
-        } else {
-          setError(response.message || 'Login failed')
-        }
+        // Design-only form - no API calls
+        console.log('Login form submitted:', { email, password })
+        // You can add custom logic here if needed
       }
     } catch (error: any) {
-      setError(error.message || 'An unexpected error occurred')
+      console.error('Form submission error:', error)
     } finally {
       setIsSubmitting(false)
     }
@@ -56,12 +40,6 @@ export default function LoginForm({
       onSubmit={handleSubmit}
       className='space-y-6'
     >
-      {error && (
-        <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg'>
-          {error}
-        </div>
-      )}
-
       <div className='space-y-4'>
         <div>
           <label className='block text-sm font-medium text-gray-700 mb-2'>

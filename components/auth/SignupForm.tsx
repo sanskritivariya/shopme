@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
-import { AuthApi } from '@/lib/api/client'
 
 interface SignupFormProps {
   onSubmit?: (data: {
@@ -26,9 +24,7 @@ export default function SignupForm({
     confirmPassword: '',
     role: 'user',
   })
-  const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -39,25 +35,18 @@ export default function SignupForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
     setIsSubmitting(true)
 
     try {
       if (onSubmit) {
         onSubmit(formData)
       } else {
-        // Use the new API client
-        const response = await AuthApi.signup(formData)
-
-        if (response.success) {
-          // Redirect based on user role (all signups are users)
-          router.push('/user/products')
-        } else {
-          setError(response.message || 'Signup failed')
-        }
+        // Design-only form - no API calls
+        console.log('Signup form submitted:', formData)
+        // You can add custom logic here if needed
       }
     } catch (error: any) {
-      setError(error.message || 'An unexpected error occurred')
+      console.error('Form submission error:', error)
     } finally {
       setIsSubmitting(false)
     }
@@ -68,12 +57,6 @@ export default function SignupForm({
       onSubmit={handleSubmit}
       className='space-y-6'
     >
-      {error && (
-        <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg'>
-          {error}
-        </div>
-      )}
-
       <div className='space-y-4'>
         <div>
           <label className='block text-sm font-medium text-gray-700 mb-2'>
