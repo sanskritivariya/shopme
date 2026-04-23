@@ -1,26 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
-export default function UserLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AdminSidebar() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { userProfile, loading, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
-
-  useEffect(() => {
-    if (!loading && (!userProfile || userProfile.role !== 'user')) {
-      router.push('/login')
-    }
-  }, [userProfile, loading, router])
+  const { logout } = useAuth()
 
   const handleLogout = async () => {
     await logout()
@@ -29,8 +18,27 @@ export default function UserLayout({
 
   const menuItems = [
     {
+      name: 'Dashboard',
+      href: '/admin',
+      icon: (
+        <svg
+          className='w-5 h-5'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
+          <path
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            strokeWidth={2}
+            d='M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'
+          />
+        </svg>
+      ),
+    },
+    {
       name: 'Products',
-      href: '/user/products',
+      href: '/admin/products',
       icon: (
         <svg
           className='w-5 h-5'
@@ -48,8 +56,8 @@ export default function UserLayout({
       ),
     },
     {
-      name: 'Cart',
-      href: '/user/cart',
+      name: 'Users',
+      href: '/admin/users',
       icon: (
         <svg
           className='w-5 h-5'
@@ -61,14 +69,14 @@ export default function UserLayout({
             strokeLinecap='round'
             strokeLinejoin='round'
             strokeWidth={2}
-            d='M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z'
+            d='M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
           />
         </svg>
       ),
     },
     {
-      name: 'Orders',
-      href: '/user/orders',
+      name: 'Categories',
+      href: '/admin/categories',
       icon: (
         <svg
           className='w-5 h-5'
@@ -80,23 +88,15 @@ export default function UserLayout({
             strokeLinecap='round'
             strokeLinejoin='round'
             strokeWidth={2}
-            d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'
+            d='M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'
           />
         </svg>
       ),
     },
   ]
 
-  if (loading || !userProfile || userProfile.role !== 'user') {
-    return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-green-600'></div>
-      </div>
-    )
-  }
-
   return (
-    <div className='min-h-screen bg-gray-50 flex'>
+    <>
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -114,7 +114,7 @@ export default function UserLayout({
       `}
       >
         <div className='flex items-center justify-between h-16 px-6 border-b'>
-          <h1 className='text-xl font-bold text-gray-800'>ShopHub</h1>
+          <h1 className='text-xl font-bold text-gray-800'>ShopMe Admin</h1>
           <button
             onClick={() => setSidebarOpen(false)}
             className='lg:hidden text-gray-500 hover:text-gray-700'
@@ -183,38 +183,27 @@ export default function UserLayout({
         </div>
       </div>
 
-      {/* Main content */}
-      <div className='flex-1 flex flex-col min-h-screen'>
-        {/* Top bar */}
-        <div className='bg-white shadow-sm border-b'>
-          <div className='flex items-center justify-between h-16 px-4'>
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className='lg:hidden text-gray-500 hover:text-gray-700'
-            >
-              <svg
-                className='w-6 h-6'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M4 6h16M4 12h16M4 18h16'
-                />
-              </svg>
-            </button>
-            <div className='flex items-center space-x-4'>
-              <span className='text-sm text-gray-600'>Welcome to ShopHub</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Page content */}
-        <main className='flex-1 p-6'>{children}</main>
+      {/* Mobile menu button */}
+      <div className='lg:hidden fixed top-4 left-4 z-50'>
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className='p-2 rounded-lg bg-white shadow-md text-gray-700 hover:text-gray-900'
+        >
+          <svg
+            className='w-6 h-6'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M4 6h16M4 12h16M4 18h16'
+            />
+          </svg>
+        </button>
       </div>
-    </div>
+    </>
   )
 }

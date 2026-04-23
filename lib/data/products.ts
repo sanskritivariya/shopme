@@ -1,54 +1,179 @@
-// Shared product data store for API routes
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  getDoc,
+  getDocs,
+  query,
+  orderBy,
+  where,
+} from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 export interface Product {
-  id: string
+  id?: string
   name: string
   description: string
-  price: number
-  image: string
-  sizes: string[]
   category: string
+  price: number
+  imageUrl?: string
   stock: number
+  status: 'active' | 'inactive'
+  createdBy: string
   createdAt: string
   updatedAt: string
 }
 
-// Mock product data - shared across all API routes
-export let products: Product[] = [
-  {
-    id: '1',
-    name: 'Classic White T-Shirt',
-    description: 'Comfortable and stylish white t-shirt made from premium cotton',
-    price: 29.99,
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500',
-    sizes: ['S', 'M', 'L', 'XL'],
-    category: 'clothing',
-    stock: 50,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: '2',
-    name: 'Denim Jeans',
-    description: 'Classic fit denim jeans with modern styling',
-    price: 79.99,
-    image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500',
-    sizes: ['28', '30', '32', '34', '36'],
-    category: 'clothing',
-    stock: 30,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: '3',
-    name: 'Leather Jacket',
-    description: 'Premium leather jacket with a modern cut',
-    price: 199.99,
-    image: 'https://images.unsplash.com/photo-1551024601-b1d8c7b8c6e8?w=500',
-    sizes: ['S', 'M', 'L', 'XL'],
-    category: 'clothing',
-    stock: 15,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+export interface Category {
+  id?: string
+  name: string
+  description: string
+  createdAt: string
+}
+
+// Product CRUD operations
+export const createProduct = async (
+  product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>,
+) => {
+  try {
+    const now = new Date().toISOString()
+    const productData = {
+      ...product,
+      createdAt: now,
+      updatedAt: now,
+    }
+
+    const docRef = await addDoc(collection(db, 'products'), productData)
+    return { success: true, id: docRef.id }
+  } catch (error: any) {
+    console.error('Error creating product:', error)
+    return { success: false, error: error.message }
   }
-]
+}
+
+export const updateProduct = async (id: string, product: Partial<Product>) => {
+  try {
+    const productData = {
+      ...product,
+      updatedAt: new Date().toISOString(),
+    }
+
+    await updateDoc(doc(db, 'products', id), productData)
+    return { success: true }
+  } catch (error: any) {
+    console.error('Error updating product:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+export const deleteProduct = async (id: string) => {
+  try {
+    await deleteDoc(doc(db, 'products', id))
+    return { success: true }
+  } catch (error: any) {
+    console.error('Error deleting product:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+export const getProduct = async (id: string) => {
+  try {
+    const docSnap = await getDoc(doc(db, 'products', id))
+    if (docSnap.exists()) {
+      return {
+        success: true,
+        product: { id: docSnap.id, ...docSnap.data() } as Product,
+      }
+    } else {
+      return { success: false, error: 'Product not found' }
+    }
+  } catch (error: any) {
+    console.error('Error getting product:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+export const getAllProducts = async () => {
+  try {
+    const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'))
+    const querySnapshot = await getDocs(q)
+    const products = querySnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as Product,
+    )
+    return { success: true, products }
+  } catch (error: any) {
+    console.error('Error getting products:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+export const getProductsByCategory = async (category: string) => {
+  try {
+    const q = query(
+      collection(db, 'products'),
+      where('category', '==', category),
+      where('status', '==', 'active'),
+      orderBy('createdAt', 'desc'),
+    )
+    const querySnapshot = await getDocs(q)
+    const products = querySnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as Product,
+    )
+    return { success: true, products }
+  } catch (error: any) {
+    console.error('Error getting products by category:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+export const getActiveProducts = async () => {
+  try {
+    const q = query(
+      collection(db, 'products'),
+      where('status', '==', 'active'),
+      orderBy('createdAt', 'desc'),
+    )
+    const querySnapshot = await getDocs(q)
+    const products = querySnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as Product,
+    )
+    return { success: true, products }
+  } catch (error: any) {
+    console.error('Error getting active products:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+// Category CRUD operations
+export const createCategory = async (
+  category: Omit<Category, 'id' | 'createdAt'>,
+) => {
+  try {
+    const categoryData = {
+      ...category,
+      createdAt: new Date().toISOString(),
+    }
+
+    const docRef = await addDoc(collection(db, 'categories'), categoryData)
+    return { success: true, id: docRef.id }
+  } catch (error: any) {
+    console.error('Error creating category:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+export const getAllCategories = async () => {
+  try {
+    const q = query(collection(db, 'categories'), orderBy('name', 'asc'))
+    const querySnapshot = await getDocs(q)
+    const categories = querySnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as Category,
+    )
+    return { success: true, categories }
+  } catch (error: any) {
+    console.error('Error getting categories:', error)
+    return { success: false, error: error.message }
+  }
+}
