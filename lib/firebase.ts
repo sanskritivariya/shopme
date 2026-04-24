@@ -12,6 +12,7 @@ import {
   getDoc,
   collection,
 } from 'firebase/firestore'
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -23,11 +24,28 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
+console.log('Firebase config:', {
+  apiKey: !!firebaseConfig.apiKey,
+  authDomain: !!firebaseConfig.authDomain,
+  projectId: !!firebaseConfig.projectId,
+  storageBucket: !!firebaseConfig.storageBucket,
+  messagingSenderId: !!firebaseConfig.messagingSenderId,
+  appId: !!firebaseConfig.appId,
+})
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
 const db = getFirestore(app)
+const storage = getStorage(app)
 
-export { auth, db }
+console.log('Firebase initialized successfully:', {
+  app: !!app,
+  auth: !!auth,
+  db: !!db,
+  storage: !!storage,
+})
+
+export { auth, db, storage }
 export { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut }
-export { doc, setDoc, getDoc, collection }
+export { doc, setDoc, getDoc, collection, ref, uploadBytes, getDownloadURL }

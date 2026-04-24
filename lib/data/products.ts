@@ -19,18 +19,25 @@ export interface Product {
   category: string
   price: number
   imageUrl?: string
+  images?: string[] // Multiple images
   stock: number
   status: 'active' | 'inactive'
   createdBy: string
   createdAt: string
   updatedAt: string
+  tags?: string[] // Additional tags for better filtering
+  specifications?: Record<string, any> // Additional product specs
+  sizes?: string[] // Available sizes (e.g., S, M, L, XL or US 8, US 9, etc.)
 }
 
 export interface Category {
   id?: string
   name: string
   description: string
+  parentCategory?: string // For hierarchical categories (e.g., Shoes -> Men Shoes)
+  image?: string
   createdAt: string
+  updatedAt: string
 }
 
 // Product CRUD operations
@@ -38,6 +45,9 @@ export const createProduct = async (
   product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>,
 ) => {
   try {
+    console.log('Creating product with data:', product)
+    console.log('Firebase db initialized:', !!db)
+
     const now = new Date().toISOString()
     const productData = {
       ...product,
@@ -45,10 +55,18 @@ export const createProduct = async (
       updatedAt: now,
     }
 
+    console.log('Final product data to save:', productData)
+    console.log('Attempting to add to products collection...')
+
     const docRef = await addDoc(collection(db, 'products'), productData)
+    console.log('Product created successfully with ID:', docRef.id)
+
     return { success: true, id: docRef.id }
   } catch (error: any) {
     console.error('Error creating product:', error)
+    console.error('Error code:', error.code)
+    console.error('Error message:', error.message)
+    console.error('Full error:', error)
     return { success: false, error: error.message }
   }
 }
@@ -148,14 +166,15 @@ export const getActiveProducts = async () => {
 
 // Category CRUD operations
 export const createCategory = async (
-  category: Omit<Category, 'id' | 'createdAt'>,
+  category: Omit<Category, 'id' | 'createdAt' | 'updatedAt'>,
 ) => {
   try {
+    const now = new Date().toISOString()
     const categoryData = {
       ...category,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     }
-
     const docRef = await addDoc(collection(db, 'categories'), categoryData)
     return { success: true, id: docRef.id }
   } catch (error: any) {
@@ -164,9 +183,36 @@ export const createCategory = async (
   }
 }
 
+export const updateCategory = async (
+  id: string,
+  category: Partial<Category>,
+) => {
+  try {
+    const categoryData = {
+      ...category,
+      updatedAt: new Date().toISOString(),
+    }
+    await updateDoc(doc(db, 'categories', id), categoryData)
+    return { success: true }
+  } catch (error: any) {
+    console.error('Error updating category:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+export const deleteCategory = async (id: string) => {
+  try {
+    await deleteDoc(doc(db, 'categories', id))
+    return { success: true }
+  } catch (error: any) {
+    console.error('Error deleting category:', error)
+    return { success: false, error: error.message }
+  }
+}
+
 export const getAllCategories = async () => {
   try {
-    const q = query(collection(db, 'categories'), orderBy('name', 'asc'))
+    const q = query(collection(db, 'categories'), orderBy('createdAt', 'desc'))
     const querySnapshot = await getDocs(q)
     const categories = querySnapshot.docs.map(
       (doc) => ({ id: doc.id, ...doc.data() }) as Category,
@@ -174,6 +220,25 @@ export const getAllCategories = async () => {
     return { success: true, categories }
   } catch (error: any) {
     console.error('Error getting categories:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+export const getCategoriesByParent = async (parentCategory?: string) => {
+  try {
+    let q = query(collection(db, 'categories'), orderBy('name'))
+    if (parentCategory) {
+      q = query(q, where('parentCategory', '==', parentCategory))
+    } else {
+      q = query(q, where('parentCategory', '==', null))
+    }
+    const querySnapshot = await getDocs(q)
+    const categories = querySnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as Category,
+    )
+    return { success: true, categories }
+  } catch (error: any) {
+    console.error('Error getting categories by parent:', error)
     return { success: false, error: error.message }
   }
 }

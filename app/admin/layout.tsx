@@ -4,13 +4,9 @@ import { ReactNode } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import AdminSidebar from '@/components/admin/AdminSidebar'
+import AdminSidebar from '@/components/admin/Sidebar'
 
-export default function AdminLayout({
-  children,
-}: {
-  children: ReactNode
-}) {
+export default function AdminLayout({ children }: { children: ReactNode }) {
   const { userProfile, loading } = useAuth()
   const router = useRouter()
 
@@ -22,8 +18,8 @@ export default function AdminLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600'></div>
       </div>
     )
   }
@@ -33,12 +29,10 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className='flex h-screen bg-gray-100'>
       <AdminSidebar />
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6">
-          {children}
-        </div>
+      <main className='flex-1 overflow-y-auto'>
+        <div className='p-6'>{children}</div>
       </main>
     </div>
   )

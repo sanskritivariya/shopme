@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
+import { saveUserRole, clearUserData, getStoredUser } from '@/utils/auth'
 
 interface UserProfile {
   uid: string
@@ -43,16 +44,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Initialize with localStorage data if available (for faster initial load)
+    const storedUser = getStoredUser()
+    if (storedUser) {
+      setUserProfile(storedUser as UserProfile)
+      console.log('Initialized userProfile from localStorage:', storedUser)
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('Auth state changed:', user?.email || 'No user')
       setUser(user)
 
       if (user) {
         const userDoc = await getDoc(doc(db, 'users', user.uid))
         if (userDoc.exists()) {
-          setUserProfile(userDoc.data() as UserProfile)
+          const profile = userDoc.data() as UserProfile
+          setUserProfile(profile)
+
+          // Update localStorage with current profile data
+          saveUserRole({
+            uid: profile.uid,
+            email: profile.email,
+            role: profile.role,
+            name: profile.name,
+          })
+          console.log('Updated userProfile from Firestore:', profile)
+        } else {
+          // Create a default profile for users without Firestore document
+          const defaultProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email!,
+            role: 'user', // Default role, can be updated manually in Firestore
+            createdAt: new Date().toISOString(),
+            name: user.displayName || '',
+          }
+          setUserProfile(defaultProfile)
+
+          // Optionally create the document in Firestore
+          try {
+            await setDoc(doc(db, 'users', user.uid), defaultProfile)
+            saveUserRole({
+              uid: defaultProfile.uid,
+              email: defaultProfile.email,
+              role: defaultProfile.role,
+              name: defaultProfile.name,
+            })
+            console.log('Created default profile:', defaultProfile)
+          } catch (error) {
+            console.error('Error creating user document:', error)
+          }
         }
       } else {
         setUserProfile(null)
+        clearUserData()
+        console.log('User logged out, cleared profile')
       }
 
       setLoading(false)
@@ -72,6 +117,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (userDoc.exists()) {
         const profile = userDoc.data() as UserProfile
+
+        // Update state immediately
+        setUserProfile(profile)
+
+        // Save user data to localStorage
+        saveUserRole({
+          uid: profile.uid,
+          email: profile.email,
+          role: profile.role,
+          name: profile.name,
+        })
+
         return { success: true, role: profile.role }
       } else {
         return { success: false, error: 'User profile not found' }
@@ -104,6 +161,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Firestore document created successfully')
       setUserProfile(userProfile)
 
+      // Save user data to localStorage
+      saveUserRole({
+        uid: userProfile.uid,
+        email: userProfile.email,
+        role: userProfile.role,
+        name: userProfile.name,
+      })
+
       return { success: true }
     } catch (error: any) {
       console.error('Signup error details:', error)
@@ -115,6 +180,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await signOut(auth)
+    // Clear user data from localStorage
+    clearUserData()
   }
 
   return (

@@ -8,7 +8,7 @@ import {
   Category,
 } from '@/lib/data/products'
 import { useAuth } from '@/contexts/AuthContext'
-import AdminSidebar from '@/components/admin/AdminSidebar'
+import AdminSidebar from '@/components/admin/Sidebar'
 
 export default function AdminDashboard() {
   const [products, setProducts] = useState<Product[]>([])

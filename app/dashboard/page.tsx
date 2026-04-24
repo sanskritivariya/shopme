@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import AdminSidebar from '@/components/admin/AdminSidebar'
+import Sidebar from '@/components/admin/Sidebar'
 
 export default function DashboardPage() {
   const { userProfile, loading } = useAuth()
@@ -24,7 +24,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className='min-h-screen bg-gray-50 flex'>
-        <AdminSidebar />
+        <Sidebar />
       </div>
     )
   }

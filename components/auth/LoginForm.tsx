@@ -38,8 +38,16 @@ export default function LoginForm({
         console.log('Login result:', result) // Debug log
 
         if (result.success) {
-          console.log('Redirecting to dashboard') // Debug log
-          router.push('/dashboard')
+          console.log('Login successful, role:', result.role) // Debug log
+
+          // Role-based routing
+          if (result.role === 'admin') {
+            console.log('Redirecting to admin dashboard')
+            router.push('/dashboard')
+          } else {
+            console.log('Redirecting to user dashboard')
+            router.push('/products')
+          }
         } else {
           setError(result.error || 'Login failed')
         }
